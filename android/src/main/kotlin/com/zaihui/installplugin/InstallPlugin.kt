@@ -29,21 +29,21 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
         private var appId: String? = null
 
         @JvmStatic
-        fun registerWith(registrar: Registrar): Unit { 
+        fun registerWith(registrar: Registrar): Unit {
             val channel = MethodChannel(registrar.messenger(), "install_plugin")
             val installPlugin = InstallPlugin(registrar)
             channel.setMethodCallHandler(installPlugin)
             registrar.addActivityResultListener { requestCode, resultCode, intent ->
                 Log.d(
-                    "ActivityResultListener",
-                    "requestCode=$requestCode, resultCode = $resultCode, intent = $intent"
+                        "ActivityResultListener",
+                        "requestCode=$requestCode, resultCode = $resultCode, intent = $intent"
                 )
                 if (resultCode == Activity.RESULT_OK && requestCode == installRequestCode) {
                     installPlugin.install24(registrar.context(), apkFile, appId)
                     true
                 } else
 
-                false
+                    false
             }
         }
     }
@@ -71,16 +71,16 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
     private fun installApk(filePath: String?, currentAppId: String?) {
         if (filePath == null) throw NullPointerException("fillPath is null!")
         val activity: Activity =
-            registrar.activity() ?: throw NullPointerException("context is null!")
+                registrar.activity() ?: throw NullPointerException("context is null!")
 
         val file = File(filePath)
         if (!file.exists()) throw FileNotFoundException("$filePath is not exist! or check permission")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             if (canRequestPackageInstalls(activity)) install24(activity, file, currentAppId)
             else {
-                showSettingPackageInstall(activity)
                 apkFile = file
                 appId = currentAppId
+                showSettingPackageInstall(activity, apkFile)
             }
         } else {
             installBelow24(activity, file)
@@ -88,12 +88,19 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
     }
 
 
-    private fun showSettingPackageInstall(activity: Activity) { // todo to test with android 26
+    private fun showSettingPackageInstall(activity: Activity, apkFile: File?) { // todo to test with android 26
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             Log.d("SettingPackageInstall", ">= Build.VERSION_CODES.O")
-            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
-            intent.data = Uri.parse("package:" + activity.packageName)
-            activity.startActivityForResult(intent, installRequestCode)
+//            val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+            /*    intent.data = Uri.parse("package:" + activity.packageName)
+                activity.startActivityForResult(intent, installRequestCode)*/
+
+            val intent = Intent(Intent.ACTION_VIEW)
+            val contentUri = apkFile?.let { FileProvider.getUriForFile(activity, "$appId.fileProvider.install", it) }
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            intent.setDataAndType(contentUri, "application/vnd.android.package-archive")
+            activity.startActivity(intent)
         } else {
             throw RuntimeException("VERSION.SDK_INT < O")
         }
