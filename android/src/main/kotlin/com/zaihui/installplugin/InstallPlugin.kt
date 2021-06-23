@@ -33,7 +33,7 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
             val channel = MethodChannel(registrar.messenger(), "install_plugin")
             val installPlugin = InstallPlugin(registrar)
             channel.setMethodCallHandler(installPlugin)
-            registrar.addActivityResultListener { requestCode, resultCode, intent ->
+            /*registrar.addActivityResultListener { requestCode, resultCode, intent ->
                 Log.d(
                         "ActivityResultListener",
                         "requestCode=$requestCode, resultCode = $resultCode, intent = $intent"
@@ -44,7 +44,7 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
                 } else
 
                     false
-            }
+            }*/
         }
     }
 
@@ -70,20 +70,35 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
 
     private fun installApk(filePath: String?, currentAppId: String?) {
         if (filePath == null) throw NullPointerException("fillPath is null!")
-        val activity: Activity =
+        val context: Activity =
                 registrar.activity() ?: throw NullPointerException("context is null!")
 
         val file = File(filePath)
         if (!file.exists()) throw FileNotFoundException("$filePath is not exist! or check permission")
+        /*    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                if (canRequestPackageInstalls(activity)) install24(activity, file, currentAppId)
+                else {
+                    apkFile = file
+                    appId = currentAppId
+                    showSettingPackageInstall(activity, apkFile)
+                }
+            } else {
+                installBelow24(activity, file)
+            }*/
+
+        val intent = Intent(Intent.ACTION_VIEW)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (canRequestPackageInstalls(activity)) install24(activity, file, currentAppId)
-            else {
-                apkFile = file
-                appId = currentAppId
-                showSettingPackageInstall(activity, apkFile)
-            }
+            //7.0及以上
+            val contentUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            intent.setDataAndType(contentUri, "application/vnd.android.package-archive")
+            context.startActivity(intent)
         } else {
-            installBelow24(activity, file)
+            //7.0以下
+            intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive")
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(intent)
         }
     }
 
