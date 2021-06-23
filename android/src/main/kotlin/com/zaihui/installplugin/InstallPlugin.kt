@@ -89,7 +89,7 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
         val intent = Intent(Intent.ACTION_VIEW)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             //7.0及以上
-            val contentUri = FileProvider.getUriForFile(context, "$appId.fileProvider.install", file)
+            val contentUri = FileProvider.getUriForFile(context, "$currentAppId.fileProvider.install", file)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             intent.setDataAndType(contentUri, "application/vnd.android.package-archive")
