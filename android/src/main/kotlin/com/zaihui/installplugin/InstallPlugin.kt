@@ -77,7 +77,9 @@ public class InstallPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         }
     }
 
-    override fun onAttachedToEngine(p0: FlutterPlugin.FlutterPluginBinding) {
+    override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
+        val channel = MethodChannel(flutterPluginBinding.getFlutterEngine().getDartExecutor(), "install_plugin")
+        channel.setMethodCallHandler(InstallPlugin())
     }
 
     override fun onDetachedFromEngine(p0: FlutterPlugin.FlutterPluginBinding) {
