@@ -141,7 +141,7 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
      * 在android 6.0 以上如果没有动态申请文件读写权限，会导致文件读取失败，你将会收到一个异常。
      * 插件中不封装申请权限逻辑，是为了使模块功能单一，调用者可以引入独立的权限申请插件
      */
-    private fun install24(context: Context?, file: File?, appId: String?) {
+  /*  private fun install24(context: Context?, file: File?, appId: String?) {
         if (context == null) throw NullPointerException("context is null!")
         if (file == null) throw NullPointerException("file is null!")
         if (appId == null) throw NullPointerException("appId is null!")
@@ -151,5 +151,5 @@ class InstallPlugin(private val registrar: Registrar) : MethodCallHandler {
         val uri: Uri = FileProvider.getUriForFile(context, "$appId.fileProvider.install", file)
         intent.setDataAndType(uri, "application/vnd.android.package-archive")
         context.startActivity(intent)
-    }
+    }*/
 }
